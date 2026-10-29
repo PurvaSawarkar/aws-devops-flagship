@@ -1,81 +1,97 @@
-# AWS DevOps Flagship Project
+# TaskForge
 
-An end-to-end DevOps portfolio project demonstrating a containerized Task Management API deployed on AWS EC2.
+TaskForge is a task management application I'm building while learning how to design, deploy, and manage applications using AWS and modern DevOps tools.
 
-## Project Overview
+The goal is to build more than just an API. I want to understand the complete workflow—from writing and testing the application to containerizing it, managing cloud infrastructure, and automating checks through CI/CD.
 
-A REST API built with FastAPI to create, retrieve, update, and delete tasks. The application uses PostgreSQL for persistent storage and Docker Compose to run the API and database together.
+## What I'm building
 
-## Tech Stack
+The application currently has a FastAPI backend that supports task management operations, with PostgreSQL handling data storage.
 
-- **Language:** Python
-- **API Framework:** FastAPI
-- **Database:** PostgreSQL
-- **Containers:** Docker, Docker Compose
-- **Cloud:** AWS EC2 (Ubuntu)
-- **Testing:** pytest
-- **Version Control:** Git and GitHub
+The project uses:
 
-## Features
+- **Python and FastAPI** for the API
+- **PostgreSQL** for the database
+- **Docker and Docker Compose** to run the application and database
+- **AWS EC2** to host the application
+- **Terraform** to manage AWS infrastructure
+- **Amazon S3** to store Terraform state remotely
+- **GitHub Actions** to run tests and validate Terraform configuration
 
-- CRUD endpoints for task management
-- Health, readiness, and application version endpoints
-- Interactive API documentation with Swagger UI
-- Containerized API and PostgreSQL database
-- Database health checks and service dependency management
-- Persistent PostgreSQL data using a Docker volume
-- Non-root user in the API container
-- Automated tests and code quality checks
+## How it works
 
-## Run Locally
+The API handles task requests and communicates with PostgreSQL to store and retrieve data. Docker Compose runs the application and database together.
 
-1. Create a `.env` file using `.env.example` as a reference.
-2. Set a strong `POSTGRES_PASSWORD` in `.env`.
-3. Start the application:
+The application is hosted on an AWS EC2 instance. Terraform tracks the existing infrastructure, while its state is stored in an S3 backend with versioning, encryption, and state locking enabled.
 
-   ```bash
-   docker compose up --build -d
-   ```
+GitHub Actions runs the Python test and code-quality checks, along with a separate Terraform formatting and validation workflow.
 
-4. Open the API documentation:
+## Running locally
 
-   `http://127.0.0.1:8000/docs`
+You'll need Python and Docker with Docker Compose installed.
 
-5. Check application health:
+Clone the repository:
 
-   `http://127.0.0.1:8000/health`
+```bash
+git clone https://github.com/PurvaSawarkar/aws-devops-flagship.git
+cd aws-devops-flagship
+```
 
-## Deployment
+Create a Python virtual environment:
 
-The application has been deployed on an AWS EC2 Ubuntu instance using Docker Compose.
+```bash
+python -m venv .venv
+```
 
-- The API and PostgreSQL run in separate containers.
-- PostgreSQL data is stored in a named Docker volume.
-- The database port is not published publicly.
-- The API is accessed through an SSH tunnel for testing.
-- The EC2 security group restricts SSH access to an authorized source IP.
+Activate it in Windows PowerShell:
 
-## Testing and Quality
+```powershell
+.venv\Scripts\Activate.ps1
+```
 
-- Six automated tests passed during project validation.
-- API endpoints were tested through Swagger UI.
-- Code quality and dependency security checks passed during project validation.
-- PostgreSQL connectivity and data persistence were verified.
+Install the development dependencies:
 
-## Planned Improvements
+```bash
+pip install -r requirements-dev.txt
+```
 
-- Add a GitHub Actions CI pipeline.
-- Provision AWS infrastructure using Terraform.
-- Improve deployment automation and monitoring.
+Start the application and database:
 
-## Security Notes
+```bash
+docker compose up --build
+```
 
-- Keep `.env`, private SSH keys, and credentials out of Git.
-- Use strong database passwords and restrict inbound network access.
-- Do not expose the PostgreSQL port publicly.
+Check the health endpoint at `http://localhost:8000/health`, provided the Compose configuration exposes port 8000 and the health route is configured at that path.
 
-## Project Status
+## Terraform
 
-**Completed:** API implementation, Docker Compose setup, AWS EC2 deployment, endpoint validation, and PostgreSQL persistence verification.
+Terraform files are located in `infra/terraform/`.
 
-**Planned:** CI/CD automation and Terraform infrastructure provisioning.
+Initialize Terraform:
+
+```bash
+terraform -chdir=infra/terraform init
+```
+
+Format and validate the configuration:
+
+```bash
+terraform -chdir=infra/terraform fmt -check -recursive
+terraform -chdir=infra/terraform validate
+```
+
+Review infrastructure changes before applying them:
+
+```bash
+terraform -chdir=infra/terraform plan
+```
+
+I don't apply infrastructure changes without reviewing the plan first.
+
+## Current progress
+
+The backend, database integration, Docker setup, AWS hosting, Terraform state migration, and basic CI workflows are in place.
+
+I'm continuing to improve the project in stages, with deployment automation, monitoring, security, and a frontend as future milestones.
+
+This repository is a practical learning project, and I'll keep documenting the decisions and improvements as it grows.
