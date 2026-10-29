@@ -16,3 +16,14 @@ crash.log
 *.tfvars
 !example.tfvars
 .coverage
+# Terraform generated files and secrets
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
