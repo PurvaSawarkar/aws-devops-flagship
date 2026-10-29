@@ -2,6 +2,14 @@
 terraform {
   required_version = ">= 1.5.0"
 
+  backend "s3" {
+    bucket       = "aws-devops-tfstate-462016339360-purva"
+    key          = "aws-devops-flagship/terraform.tfstate"
+    region       = "ap-south-1"
+    encrypt      = true
+    use_lockfile = true
+  }
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -11,13 +19,13 @@ terraform {
 }
 
 provider "aws" {
-  region = "ap-south-1"
+  region = var.aws_region
 }
 
 resource "aws_security_group" "server" {
   name        = "devops-task-server-sg"
   description = "launch-wizard-12 created 2026-10-27T13:02:10.420Z"
-  vpc_id      = "vpc-0c76a5d1b244eb866"
+  vpc_id      = var.vpc_id
 
   lifecycle {
     ignore_changes = all
@@ -26,10 +34,10 @@ resource "aws_security_group" "server" {
 
 resource "aws_instance" "server" {
   ami                    = "ami-094adff9b24048c5c"
-  instance_type          = "t3.micro"
-  subnet_id              = "subnet-0251c0dd207bae320"
-  key_name               = "Mumbai"
-  iam_instance_profile   = "devops-task-ssm-role"
+  instance_type          = var.instance_type
+  subnet_id              = var.subnet_id
+  key_name               = var.key_name
+  iam_instance_profile   = var.iam_instance_profile
   vpc_security_group_ids = [aws_security_group.server.id]
 
   tags = {
