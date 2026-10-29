@@ -2,7 +2,7 @@
 
 ## Overview
 
-This directory manages the AWS infrastructure for the AWS DevOps Flagship project using Terraform.
+This directory manages the AWS infrastructure for TaskForge using Terraform.
 
 ## AWS Configuration
 
