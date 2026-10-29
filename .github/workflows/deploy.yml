@@ -1,4 +1,3 @@
-
 name: Deploy TaskForge to EC2
 
 on:
@@ -11,7 +10,19 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
+      - name: Inspect GitHub OIDC claims
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const token = await core.getIDToken('sts.amazonaws.com');
+            const payload = JSON.parse(
+              Buffer.from(token.split('.')[1], 'base64url').toString()
+            );
+            console.log('OIDC audience:', payload.aud);
+            console.log('OIDC subject:', payload.sub);
+
       - name: Configure AWS credentials with OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -27,7 +38,7 @@ jobs:
             --instance-ids "i-0e82634cc12f748d7" \
             --document-name "AWS-RunShellScript" \
             --comment "Deploy TaskForge from GitHub Actions" \
-            --parameters 'commands=["set -e","cd /home/ubuntu/aws-devops-flagship","git pull --ff-only origin master","sudo docker compose up -d --build","curl --fail --silent --show-error http://localhost:8000/health"]' \
+            --parameters 'commands=["set -e","sudo -u ubuntu bash -lc '\''cd /home/ubuntu/aws-devops-flagship && git pull --ff-only origin master && sudo docker compose up -d --build && curl --fail --silent --show-error http://localhost:8000/health'\''"]' \
             --query 'Command.CommandId' \
             --output text)
 
