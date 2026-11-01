@@ -1,34 +1,164 @@
-# TaskForge
+# TaskForge – AWS DevOps Flagship Project
 
-TaskForge is a task management application I'm building while learning how to design, deploy, and manage applications using AWS and modern DevOps tools.
+TaskForge is a task management application built as a hands-on project to learn and demonstrate modern DevOps practices, cloud infrastructure management, containerization, and CI/CD automation using AWS.
 
-The goal is to build more than just an API. I want to understand the complete workflow—from writing and testing the application to containerizing it, managing cloud infrastructure, and automating checks through CI/CD.
+The project covers the complete application delivery lifecycle—from developing and testing a FastAPI backend to deploying it on AWS EC2 through an automated GitHub Actions pipeline.
 
-## What I'm building
+## Project Overview
 
-The application currently has a FastAPI backend that supports task management operations, with PostgreSQL handling data storage.
+TaskForge currently provides a FastAPI backend with PostgreSQL for persistent data storage. The application and database run in Docker containers using Docker Compose.
 
-The project uses:
+The infrastructure is hosted on AWS and managed using Terraform. GitHub Actions automates application checks, Terraform validation, and deployment.
 
-- **Python and FastAPI** for the API
-- **PostgreSQL** for the database
-- **Docker and Docker Compose** to run the application and database
-- **AWS EC2** to host the application
-- **Terraform** to manage AWS infrastructure
-- **Amazon S3** to store Terraform state remotely
-- **GitHub Actions** to run tests and validate Terraform configuration
+## Technology Stack
 
-## How it works
+| Category | Technologies |
+|---|---|
+| Backend | Python, FastAPI |
+| Database | PostgreSQL 16 |
+| Containerization | Docker, Docker Compose |
+| Cloud Platform | AWS |
+| Compute | Amazon EC2 |
+| Infrastructure as Code | Terraform |
+| Remote Terraform State | Amazon S3 |
+| CI/CD | GitHub Actions |
+| Deployment Automation | AWS IAM OIDC, AWS Systems Manager (SSM) |
 
-The API handles task requests and communicates with PostgreSQL to store and retrieve data. Docker Compose runs the application and database together.
+## Architecture
 
-The application is hosted on an AWS EC2 instance. Terraform tracks the existing infrastructure, while its state is stored in an S3 backend with versioning, encryption, and state locking enabled.
+```text
+                 Developer
+                     |
+                     v
+               GitHub Repository
+                     |
+                     v
+              GitHub Actions
+                     |
+          +----------+----------+
+          |                     |
+          v                     v
+      CI Pipeline          Terraform CI
+      Tests & Checks       Format & Validate
+          |
+          v
+    GitHub OIDC
+          |
+          v
+       AWS IAM Role
+          |
+          v
+    AWS Systems Manager
+          |
+          v
+       AWS EC2
+          |
+          v
+      Docker Compose
+          |
+       +--+---------+
+       |            |
+       v            v
+    FastAPI      PostgreSQL
+       |
+       v
+    Health API
+```
 
-GitHub Actions runs the Python test and code-quality checks, along with a separate Terraform formatting and validation workflow.
+## Key Features and Implementation
 
-## Running locally
+### 1. FastAPI Backend
 
-You'll need Python and Docker with Docker Compose installed.
+- REST API built using FastAPI.
+- Task management operations.
+- PostgreSQL database integration.
+- Health endpoint for application monitoring.
+
+### 2. Docker and Docker Compose
+
+- Containerized FastAPI application.
+- PostgreSQL 16 Alpine database container.
+- Docker Compose manages application and database services.
+
+### 3. AWS Infrastructure
+
+- Application hosted on AWS EC2.
+- Infrastructure configuration managed using Terraform.
+- Remote Terraform state stored in Amazon S3.
+- S3 versioning and encryption enabled.
+- Terraform state locking configured using S3 lockfiles.
+
+### 4. Continuous Integration
+
+GitHub Actions automates application and infrastructure checks.
+
+The CI workflows include:
+
+- Python tests.
+- Code-quality checks.
+- Terraform formatting checks.
+- Terraform validation.
+
+### 5. Automated Deployment using GitHub Actions
+
+TaskForge uses GitHub Actions to deploy application updates to EC2 through AWS Systems Manager.
+
+Deployment workflow:
+
+1. Developer pushes changes to the GitHub repository.
+2. GitHub Actions starts the deployment workflow.
+3. GitHub authenticates with AWS using OIDC.
+4. AWS IAM validates the GitHub identity and grants the deployment role.
+5. GitHub Actions sends a deployment command through AWS Systems Manager.
+6. EC2 pulls the latest code from the `master` branch.
+7. Docker Compose rebuilds and starts the application.
+8. A health check verifies the deployment.
+
+**Security practices:**
+
+- OIDC-based authentication instead of long-lived AWS access keys.
+- IAM role with restricted deployment permissions.
+- AWS Systems Manager for remote command execution.
+- Application port bound to localhost rather than exposed publicly.
+
+## Deployment Verification
+
+The automated deployment workflow has been successfully executed.
+
+| Verification | Result |
+|---|---|
+| GitHub Actions deployment workflow | Successful |
+| AWS OIDC authentication | Successful |
+| AWS Systems Manager command | Successful |
+| Docker Compose deployment | Successful |
+| PostgreSQL container health | Healthy |
+| FastAPI health endpoint | HTTP 200 OK |
+
+Health check:
+
+```bash
+curl -i http://localhost:8000/health
+```
+
+Expected response:
+
+```http
+HTTP/1.1 200 OK
+```
+
+```json
+{
+  "status": "healthy"
+}
+```
+
+## Running Locally
+
+### Prerequisites
+
+- Python
+- Docker
+- Docker Compose
 
 Clone the repository:
 
@@ -43,13 +173,13 @@ Create a Python virtual environment:
 python -m venv .venv
 ```
 
-Activate it in Windows PowerShell:
+Activate it using Windows PowerShell:
 
 ```powershell
 .venv\Scripts\Activate.ps1
 ```
 
-Install the development dependencies:
+Install development dependencies:
 
 ```bash
 pip install -r requirements-dev.txt
@@ -61,11 +191,21 @@ Start the application and database:
 docker compose up --build
 ```
 
-Check the health endpoint at `http://localhost:8000/health`, provided the Compose configuration exposes port 8000 and the health route is configured at that path.
+Check the health endpoint:
+
+```text
+http://localhost:8000/health
+```
+
+This assumes the Compose configuration exposes port 8000 locally.
 
 ## Terraform
 
-Terraform files are located in `infra/terraform/`.
+Terraform configuration files are located in:
+
+```text
+infra/terraform/
+```
 
 Initialize Terraform:
 
@@ -73,25 +213,54 @@ Initialize Terraform:
 terraform -chdir=infra/terraform init
 ```
 
-Format and validate the configuration:
+Check formatting:
 
 ```bash
 terraform -chdir=infra/terraform fmt -check -recursive
+```
+
+Validate configuration:
+
+```bash
 terraform -chdir=infra/terraform validate
 ```
 
-Review infrastructure changes before applying them:
+Review infrastructure changes:
 
 ```bash
 terraform -chdir=infra/terraform plan
 ```
 
-I don't apply infrastructure changes without reviewing the plan first.
+Infrastructure changes should always be reviewed before applying them.
 
-## Current progress
+## Project Status
 
-The backend, database integration, Docker setup, AWS hosting, Terraform state migration, and basic CI workflows are in place.
+### Completed
 
-I'm continuing to improve the project in stages, with deployment automation, monitoring, security, and a frontend as future milestones.
+- [x] FastAPI backend
+- [x] PostgreSQL integration
+- [x] Docker and Docker Compose setup
+- [x] AWS EC2 application hosting
+- [x] Terraform infrastructure configuration
+- [x] Remote Terraform state using Amazon S3
+- [x] GitHub Actions CI pipeline
+- [x] Terraform CI workflow
+- [x] GitHub OIDC authentication with AWS IAM
+- [x] Automated deployment using AWS Systems Manager
+- [x] Post-deployment health verification
 
-This repository is a practical learning project, and I'll keep documenting the decisions and improvements as it grows.
+### Future Improvements
+
+- [ ] Monitoring and observability
+- [ ] Centralized application logging
+- [ ] Frontend development
+- [ ] Additional security improvements
+- [ ] More comprehensive automated tests
+
+## Repository
+
+GitHub: https://github.com/PurvaSawarkar/aws-devops-flagship
+
+---
+
+**TaskForge is a practical DevOps learning project focused on building, deploying, securing, and automating a cloud-hosted application using modern AWS and DevOps tools.**
